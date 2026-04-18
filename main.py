@@ -9,7 +9,7 @@ from memory.agent_memory import AgentMemory
 from AI.ai import AI
 
 if __name__ == "__main__":
-    memory = AgentMemory(max_items=10)
+    memory = AgentMemory(max_items=10, system_prompt=system_prompt)
     agent = AI(MODEL_PATH)
     while(True):
         print(f"User: ")

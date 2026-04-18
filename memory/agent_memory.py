@@ -12,6 +12,8 @@ class MemoryItem:
 
 @dataclass
 class AgentMemory:
+    system_prompt: str
+    
     max_items: int = 20
     
     buffer: deque = field(default_factory=lambda: deque(maxlen=20))
@@ -24,8 +26,6 @@ class AgentMemory:
     })
     
     summaries: List[str] = field(default_factory=list)
-    
-    system_prompt: str
     
     def add_message(self, text: str, importance: float = 1.0):
         self.buffer.append(MemoryItem(text, importance))
