@@ -1,15 +1,19 @@
 import torch
+import chromadb
 from transformers import AutoProcessor, AutoModelForCausalLM
 
 from config.config import system_prompt
 from config.paths import MODEL_PATH
 
 from memory.agent_memory import AgentMemory
+from memory.embedding import EmbeddingDatabase
 
 from AI.ai import AI
 
 if __name__ == "__main__":
-    memory = AgentMemory(max_items=10, system_prompt=system_prompt)
+    client = chromadb.Client()
+    embedDB = EmbeddingDatabase(client)
+    memory = AgentMemory(embedDB, max_items=10, system_prompt=system_prompt)
     agent = AI(MODEL_PATH)
     while(True):
         print(f"User: ")

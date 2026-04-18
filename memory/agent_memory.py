@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 
 from AI.ai import AI
 from config.paths import MODEL_PATH
+from memory.embedding import EmbeddingDatabase
 
 @dataclass
 class MemoryItem:
@@ -12,6 +13,8 @@ class MemoryItem:
 
 @dataclass
 class AgentMemory:
+    embedDB : EmbeddingDatabase
+    
     system_prompt: str
     
     max_items: int = 20
@@ -30,6 +33,7 @@ class AgentMemory:
     def add_message(self, text: str, importance: float = 1.0):
         self.buffer.append(MemoryItem(text, importance))
         self._maybe_compress()
+        self._maybe_add_embedding()
     
     def _maybe_compress(self):
         if len(self.buffer) >= self.max_items:
@@ -54,6 +58,15 @@ class AgentMemory:
         
         return summarize_model.generate(request)
     
+    def _maybe_add_embedding(self):
+        if len(self.buffer) >= self.max_items:
+            self._add_embedding()
+    
+    def _add_embedding(self):
+        oldest_message_buffer = self.buffer.popleft()
+        
+        self.embedDB._add_collection(oldest_message_buffer)
+    
     def add_fact(self, fact: str):
         self.state["facts"].append(fact)
     
@@ -63,6 +76,11 @@ class AgentMemory:
     def get_context(self) -> str:
         recent = "\n".join(i.text for i in self.buffer)
         summary = "\n".join(self.summaries[-3:])
+        
+        embedding_results = self.embedDB.get_collections(self.buffer[-1])
+        embedding_results = "\n"
+        for i in embedding_results:
+            embedding_results = embedding_results.join(i["documents"])
         
         return f"""
         SYSTEM(MOST IMPORTANT!!!): 
@@ -82,5 +100,8 @@ class AgentMemory:
 
         SUMMARY:
         {summary}
+        
+        Similar:
+        {embedding_results}
         """
         
